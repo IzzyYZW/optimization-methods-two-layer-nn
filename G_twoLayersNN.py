@@ -1,5 +1,5 @@
 import numpy as np
-
+import pdb
 
 class TwoLayersNN (object):
     """" TwoLayersNN classifier """
@@ -82,7 +82,8 @@ class TwoLayersNN (object):
                 # TODO: 10 points                                                       #
                 # - Use Naive Update to update weight parameter                         #
                 #########################################################################
-                pass
+                self.params['w1']+= -lr * grads['w1']
+                self.params['w2'] += -lr * grads['w2']
 
             elif self.update == 1:
                 #########################################################################
@@ -90,7 +91,11 @@ class TwoLayersNN (object):
                 # - Use Momentum Update to update weight parameter                      #
                 # - Momentum = 0.9                                                      #
                 #########################################################################
-                pass
+                mu = 0.9
+                self.params['VW2'] = self.params['VW2']*mu - lr * grads['w2']
+                self.params['w2'] += self.params['VW2']
+                self.params['VW1'] = self.params['VW1']*mu - lr * grads['w1']
+                self.params['w1'] += self.params['VW1']
 
             elif self.update == 2:
                 #########################################################################
@@ -102,21 +107,36 @@ class TwoLayersNN (object):
                 #   v = mu * v - lr * dw                                                #
                 #   w += -mu * v_prev + (1 + mu) * v                                    #
                 #########################################################################
-                pass
+                mu = 0.9
+                v_prev1 = self.params['VW1']
+                self.params['VW1'] = self.params['VW1'] * mu - lr * grads['w1']
+                self.params['w1'] += mu * v_prev1 + (1+mu) * self.params['VW1']
+
+                v_prev2 = self.params['VW2']
+                self.params['VW2'] = self.params['VW2'] * mu - lr * grads['w2']
+                self.params['w2'] += mu * v_prev2 + (1 + mu) * self.params['VW2']
 
             elif self.update == 3:
                 #########################################################################
                 # TODO: 20 points                                                       #
                 # - Use AdaGrad Update to update weight parameter                       #
                 #########################################################################
-                pass
+
+                self.params['cacheW1'] += grads['w1'] ** 2
+                self.params['w1'] += -lr * grads['w1']/(np.sqrt(self.params['cacheW1']) + 1e-7)
+
+                self.params['cacheW2'] += grads['w2'] ** 2
+                self.params['w2'] += -lr * grads['w2'] / (np.sqrt(self.params['cacheW2']) + 1e-7)
 
             elif self.update == 4:
                 #########################################################################
                 # TODO: 20 points                                                       #
                 # - Use RMSProp Update to update weight parameter                       #
                 #########################################################################
-                pass
+                self.params['cacheW1'] = decay * self.params['cacheW1'] + (1-decay)* grads['w1'] ** 2
+                self.params['w1'] += -lr * grads['w1'] / (np.sqrt(self.params['cacheW1']) + 1e-7)
+                self.params['cacheW2'] = decay * self.params['cacheW2'] + (1 - decay) * grads['w2'] ** 2
+                self.params['w2'] += -lr * grads['w2'] / (np.sqrt(self.params['cacheW2']) + 1e-7)
 
             else:
                 #########################################################################
@@ -124,7 +144,19 @@ class TwoLayersNN (object):
                 # - Use Adam Update to update weight parameter                          #
                 # - B1 = 0.9, B2 = 0.999                                                #
                 #########################################################################
-                pass
+                B1 = 0.9
+                B2 = 0.999
+                self.params['VW1'] = self.params['VW1'] * B1 + (1-B1) * grads['w1']
+                self.params['cacheW1'] = B2 * self.params['VW1'] + (1 - B2) * (grads['w1'] ** 2)
+                vb = self.params['VW1']/(1 - B1 ** (i+1))
+                cacheb = self.params['cacheW1']/(1 - B2 ** (i+1))
+                self.params['w1'] = lr + vb/(np.sqrt(cacheb)+ 1e-7)
+
+                self.params['VW2'] = self.params['VW2'] * B1 + (1 - B1) * grads['w2']
+                self.params['cacheW2'] = B2 * self.params['VW2'] + (1 - B2) * grads['w2'] ** 2
+                vb = self.params['VW2'] / (1 - B1 ** (i+1))
+                cacheb = self.params['cacheW2'] / (1 - B2 ** (i+1))
+                self.params['w2'] = lr + vb / (np.sqrt(cacheb) + 1e-7)
 
             self.params['b2'] += -lr * grads['b2']
             self.params['b1'] += -lr * grads['b1']
