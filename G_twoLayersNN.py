@@ -146,17 +146,17 @@ class TwoLayersNN (object):
                 #########################################################################
                 B1 = 0.9
                 B2 = 0.999
-                self.params['VW1'] = self.params['VW1'] * B1 + (1-B1) * grads['w1']
-                self.params['cacheW1'] = B2 * self.params['VW1'] + (1 - B2) * (grads['w1'] ** 2)
-                vb = self.params['VW1']/(1 - B1 ** (i+1))
-                cacheb = self.params['cacheW1']/(1 - B2 ** (i+1))
-                self.params['w1'] = lr + vb/(np.sqrt(cacheb)+ 1e-7)
+                self.params['VW1'] =  B1 * self.params['VW1']  + (1-B1) * grads['w1']
+                self.params['cacheW1'] = B2 * self.params['cacheW1']+ (1 - B2) * (grads['w1'] *grads['w1'])
+                v1b = self.params['VW1']/(1 - (B1 ** (i+1)))
+                cache1b = self.params['cacheW1']/(1 - (B2 ** (i+1)))
+                self.params['w1'] += -lr * v1b/(np.sqrt(cache1b) + 1e-7)
 
                 self.params['VW2'] = self.params['VW2'] * B1 + (1 - B1) * grads['w2']
-                self.params['cacheW2'] = B2 * self.params['VW2'] + (1 - B2) * grads['w2'] ** 2
-                vb = self.params['VW2'] / (1 - B1 ** (i+1))
-                cacheb = self.params['cacheW2'] / (1 - B2 ** (i+1))
-                self.params['w2'] = lr + vb / (np.sqrt(cacheb) + 1e-7)
+                self.params['cacheW2'] = B2 * self.params['cacheW2'] + (1 - B2) * (grads['w2'] *grads['w2'])
+                v2b = self.params['VW2'] / (1 - B1 ** (i+1))
+                cache2b = self.params['cacheW2'] / (1 - B2 ** (i+1))
+                self.params['w2'] += -lr * v2b / (np.sqrt(cache2b) + 1e-7)
 
             self.params['b2'] += -lr * grads['b2']
             self.params['b1'] += -lr * grads['b1']
